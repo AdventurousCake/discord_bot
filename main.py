@@ -4,26 +4,17 @@ import os
 import sys
 import logging
 from datetime import datetime
-
 import aiohttp
 from discord.ext import commands
 from sqlalchemy import update, insert
-
 import config
 import discord
-
-# from dotenv import load_dotenv
-# load_dotenv()
-# TOKEN = os.getenv('DISCORD_TOKEN')
-# client = discord.Client()
 
 logging.basicConfig(stream=sys.stdout,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
                     datefmt='%Y-%m-%d:%H:%M:%S',
                     level=logging.DEBUG)
 
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.future import select
 from db_init import Base, async_session, engine
 from db_models import User
@@ -37,16 +28,6 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 async def db_create(engine):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
-
-# engine = create_async_engine(f"postgresql+asyncpg://{config.user}:{config.password}@{config.host}/{config.db_name}",
-#                              future=True)
-# await db_init(engine)
-# async_sessionmaker = sessionmaker(
-#     engine, expire_on_commit=False, class_=AsyncSession
-# )
-
-# G ID 925307289433415700
 
 
 @bot.event
@@ -125,15 +106,11 @@ async def on_message(message):
     message_text_l_split = message_text_l.split()
     message_text_raw_split = message.content.split()
 
-    if 'happy birthday' in message.content.lower():
-        await message.channel.send('Happy Birthday! 🎈🎉')
-
-    elif message_text_l.startswith('/hello'):
+    if message_text_l.startswith('/hello'):
         await message.channel.send('Hello!')
 
     elif message_text_l.startswith('/help'):
         help = '''Bot commands:
-        /lvl - lvl system
         /listgames
         /kick
         /ban
@@ -193,33 +170,10 @@ async def save_history(id, username, session=async_session, message=None):
         logging.debug("db write done")
 
 
-async def get_all_user_lvl(session=async_session):
-    async with session() as session:
-        q = await session.execute(select(User, User.lvl).order_by(User.lvl))
-        return str(q.one())
-
-
-async def req():
-    async with aiohttp.ClientSession() as session:
-        async with session.get("https://uselessfacts.jsph.pl/random.json?language=en") as request:
-            if request.status == 200:
-                data = await request.json()
-
-
 def isadmin(uid):
     '''Return True if user is a bot admin, False otherwise.'''
     return True if uid in config.ADMINS_IDS else False
 
 
-bot.run(config.TOKEN)
-# async def main():
-#     # await db_create(engine)
-#     # await bot.start(config.TOKEN)
-#
-#     pool = await db_create(engine)
-#     bot.pool = pool
-#     await bot.start(config.TOKEN)
-#
-#
-# if __name__ == '__main__':
-#     asyncio.run(main(), debug=True)
+if __name__ == '__main__':
+    bot.run(config.TOKEN)
