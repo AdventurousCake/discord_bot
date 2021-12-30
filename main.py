@@ -1,4 +1,5 @@
 import asyncio
+import io
 import os
 import sys
 import logging
@@ -6,8 +7,7 @@ from datetime import datetime
 
 import aiohttp
 from discord.ext import commands
-from sqlalchemy import update
-
+from sqlalchemy import update, insert
 
 import config
 import discord
@@ -33,6 +33,7 @@ intents.members = True
 intents.bans = True
 bot = commands.Bot(command_prefix='/', intents=intents)
 
+
 async def db_create(engine):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -50,6 +51,8 @@ async def db_create(engine):
 
 @bot.event
 async def on_ready():
+    await db_create(engine)
+
     for guild in bot.guilds:
         if guild.name == 'GUILD':
             break
@@ -125,44 +128,66 @@ async def on_message(message):
     if 'happy birthday' in message.content.lower():
         await message.channel.send('Happy Birthday! 🎈🎉')
 
-    if message_text_l.startswith('/hello'):
+    elif message_text_l.startswith('/hello'):
         await message.channel.send('Hello!')
 
     elif message_text_l.startswith('/help'):
-        help = ''' Useful commands:
-
+        help = '''Bot commands:
+        /lvl - lvl system
+        /listgames
+        /kick
+        /ban
+        /unban
 		'''
         await message.channel.send(help)
 
+    elif message_text_l.startswith('/lvl'):
+        await message.channel.send(get_all_user_lvl())
+
+    elif message_text_l.startswith('/listgames'):
+        await message.channel.send("List of games")
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://i.ibb.co/z2nZ57Z/123.jpg') as resp:
+                if resp.status != 200:
+                    return await message.channel.send('Could not download file...')
+                data = io.BytesIO(await resp.read())
+                await message.channel.send(file=discord.File(data, 'cool_image.png'))
+
     await bot.process_commands(message)
-    await save_history(user_id, name)
-    await check_level_progress()
+    await save_history(user_id, name, message=message)
 
 
-async def check_level_progress(id=None):
-    data = int("123")
+def check_level_progress(id=None, data=None):
     if data % int(config.PROGRESS_USER_MSG_COUNT) == 0:
-        # inc level
-        return "SEND"
+        return True
+    else:
+        return False
 
 
-# async def get_db_data():
-#     async with async_sessionmaker() as session:
-#         q = select(User.msg_count)
-#         result = await session.execute(q)
-#         res = result.scalars().all()
-
-
-async def save_history(id, username, session=async_session):
+async def save_history(id, username, session=async_session, message=None):
     async with session() as session:
-        new_user = User(id=id, username=username, msg_count=0, date=datetime.now())
-        session.add(new_user)
+        q = insert(User).values(id=id, username=username, date=datetime.now()).on_conflict_do_nothing()
+        session.execute(q)
         # await self.db_session.flush()
 
         if id:
             q = update(User).where(User.id == id)
             q = q.values(msg_count=(User.msg_count + 1))
             await session.execute(q)
+
+        q = select(User.msg_count, User.lvl).where(User.id == id)
+        result = await session.execute(q)
+        result = result.one()
+
+        msg_count = result[0]
+        lvl = result[1]
+
+        if check_level_progress(data=msg_count):
+            q = update(User).where(User.id == id)
+            q = q.values(lvl=(User.lvl + 1))
+            await session.execute(q)
+
+            await message.channel.send(f'{username} is reached {lvl} LVL 🎉')
 
         await session.commit()
         logging.debug("db write done")
@@ -171,7 +196,7 @@ async def save_history(id, username, session=async_session):
 async def get_all_user_lvl(session=async_session):
     async with session() as session:
         q = await session.execute(select(User, User.lvl).order_by(User.lvl))
-        return q.scalars().all()
+        return str(q.one())
 
 
 async def req():
@@ -186,11 +211,15 @@ def isadmin(uid):
     return True if uid in config.ADMINS_IDS else False
 
 
-async def main():
-
-    await db_create(engine)
-    await bot.start(config.TOKEN)
-
-
-if __name__ == '__main__':
-    asyncio.run(main(), debug=True)
+bot.run(config.TOKEN)
+# async def main():
+#     # await db_create(engine)
+#     # await bot.start(config.TOKEN)
+#
+#     pool = await db_create(engine)
+#     bot.pool = pool
+#     await bot.start(config.TOKEN)
+#
+#
+# if __name__ == '__main__':
+#     asyncio.run(main(), debug=True)

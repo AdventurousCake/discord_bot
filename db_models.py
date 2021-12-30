@@ -1,11 +1,11 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, BigInteger
 from db_init import Base
 
 
 class User(Base):
     __tablename__ = 'user'
 
-    id = Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=False)
+    id = Column(BigInteger, primary_key=True, nullable=False, unique=True, autoincrement=False)
     username = Column('username', String)
     data = Column('data', String, default=None)
     date = Column('date', DateTime)
