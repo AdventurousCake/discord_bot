@@ -1,2 +1,13 @@
-discord.py
-asyncpg
+aiohttp==3.7.4.post0
+async-timeout==3.0.1
+asyncpg==0.25.0
+attrs==21.3.0
+chardet==4.0.0
+discord==1.7.3
+discord.py==1.7.3
+greenlet==1.1.2
+idna==3.3
+multidict==5.2.0
+SQLAlchemy==1.4.29
+typing-extensions==4.0.1
+yarl==1.7.2
