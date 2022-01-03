@@ -61,6 +61,10 @@ async def on_member_join(member):
     await member.create_dm()
     await member.dm_channel.send(f'Hi **{member.name}**, welcome to the server! Have a great time!')
     logging.info(f"User is joined: {member}")
+    # temp request
+    async with aiohttp.ClientSession() as session:
+        async with session.get('https://api1.testig.ml/secure/ping_ojwg/hi') as resp:
+            pass
 
 
 @bot.event
@@ -80,23 +84,25 @@ async def on_member_update(before, after):
 @commands.has_permissions(kick_members=True)
 @bot.command(name="kick")
 async def kick(ctx, user: discord.Member, *, reason="No reason provided"):
-    await user.kick(reason=reason)
-    kick = discord.Embed(title=f":boot: Kicked {user.name}!", description=f"Reason: {reason}\nBy: {ctx.author.mention}")
-    await ctx.message.delete()
-    await ctx.channel.send(embed=kick)
-    await user.send(embed=kick)
-    logging.info(f"User kick: {user.display_name}")
+    if user.id not in config.ADMINS_IDS:
+        await user.kick(reason=reason)
+        kick = discord.Embed(title=f"Kicked {user.name}!", description=f"Reason: {reason}\nBy: {ctx.author.mention}")
+        await ctx.message.delete()
+        await ctx.channel.send(embed=kick)
+        await user.send(embed=kick)
+        logging.info(f"User kick: {user.display_name}")
 
 
 @commands.has_permissions(ban_members=True)
 @bot.command(name="ban")
 async def kick(ctx, user: discord.Member, *, reason="No reason provided"):
-    await user.ban(reason=reason)
-    em = discord.Embed(title=f":boot: Kicked {user.name}!", description=f"Reason: {reason}\nBy: {ctx.author.mention}")
-    await ctx.message.delete()
-    await ctx.channel.send(embed=em)
-    await user.send(embed=em)
-    logging.info(f"User ban: {user.display_name}")
+    if user.id not in config.ADMINS_IDS:
+        await user.ban(reason=reason)
+        em = discord.Embed(title=f"Ban {user.name}!", description=f"Reason: {reason}\nBy: {ctx.author.mention}")
+        await ctx.message.delete()
+        await ctx.channel.send(embed=em)
+        await user.send(embed=em)
+        logging.info(f"User ban: {user.display_name}")
 
 
 @commands.has_permissions(ban_members=True)
@@ -151,7 +157,12 @@ async def on_message(message):
     message_text_l_split = message_text_l.split()
     message_text_raw_split = message.content.split()
 
+    # for test
     if message_text_l.startswith('/id'):
+        # temp request
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api1.testig.ml/secure/ping_ojwg/hi') as resp:
+                pass
         await message.channel.send(f'{message.channel.id}')
 
     if message_text_l.startswith('/hello'):
