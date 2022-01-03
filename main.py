@@ -116,7 +116,7 @@ def get_embed_games(title, descr, img, stars=None):
 
 
 async def get_userlist(session=async_session):
-    res = "TOP USERS BY LVL 🎉"
+    res = "🎉 **TOP USERS BY LVL** 🎉\n"
 
     async with session() as session:
         q = select(User.username, User.lvl)
@@ -147,7 +147,7 @@ async def on_message(message):
         await message.channel.send('Hello!')
 
     elif message_text_l.startswith('/help'):
-        help = '''🤖 Bot commands:
+        help = '''🤖 **Bot commands**:
         /lvl - top users
         /listgames
         /kick
@@ -161,7 +161,7 @@ async def on_message(message):
         await message.channel.send(res)
 
     elif message_text_l.startswith('/listgames'):
-        await message.channel.send("🎲 List of games 🎯")
+        await message.channel.send("🎲 **List of games** 🎯")
 
         for game in games:
             await message.channel.send(embed=get_embed_games(title=game['title'], descr=game['description'],
@@ -208,7 +208,7 @@ async def save_history(id, username, session=async_session, message=None):
             q = q.values(lvl=(User.lvl + 1))
             await session.execute(q)
 
-            await message.channel.send(f'{username} is reached {lvl} LVL 🎉')
+            await message.channel.send(f'{username} is reached {lvl+1} LVL 🎉')
 
         await session.commit()
         logging.debug("db write done")
