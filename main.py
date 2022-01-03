@@ -41,6 +41,9 @@ async def on_ready():
         if guild.name == 'GUILD':
             break
 
+        channel = discord.utils.get(guild.channels)
+        print(channel, channel.id, sep="\t")
+
     print(
         f'{bot.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})'
@@ -52,6 +55,9 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
+    channel = bot.get_channel(id=925307289433415703)
+    await channel.send(f"User is leave: {member}")
+
     await member.create_dm()
     await member.dm_channel.send(f'Hi **{member.name}**, welcome to the server! Have a great time!')
     logging.info(f"User is joined: {member}")
@@ -59,13 +65,15 @@ async def on_member_join(member):
 
 @bot.event
 async def on_member_remove(member):
+    channel = bot.get_channel(id=925307289433415703)
+    await channel.send(f"User is leave: {member}")
     logging.info(f"User is leave: {member}")
 
 
 @bot.event
 async def on_member_update(before, after):
-    id = after.id
-    print(str(after) + f"\n{id}")
+    channel = bot.get_channel(id=925307289433415703)
+    await channel.send(f"User upd profile: {after.name}")
     logging.info(f"User upd profile: {after.name}")
 
 
@@ -143,6 +151,9 @@ async def on_message(message):
     message_text_l_split = message_text_l.split()
     message_text_raw_split = message.content.split()
 
+    if message_text_l.startswith('/id'):
+        await message.channel.send(f'{message.channel.id}')
+
     if message_text_l.startswith('/hello'):
         await message.channel.send('Hello!')
 
@@ -153,6 +164,7 @@ async def on_message(message):
         /kick
         /ban
         /unban
+        /giphy
 		'''
         await message.channel.send(help)
 
