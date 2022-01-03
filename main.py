@@ -56,11 +56,11 @@ async def on_ready():
 @bot.event
 async def on_member_join(member):
     channel = bot.get_channel(id=925307289433415703)
-    await channel.send(f"User is leave: {member}")
+    await channel.send(f'🎉 Hi **{member.name}**, welcome to the server! Have a great time!')
 
-    await member.create_dm()
-    await member.dm_channel.send(f'Hi **{member.name}**, welcome to the server! Have a great time!')
-    logging.info(f"User is joined: {member}")
+    # await member.create_dm()
+    # await member.dm_channel.send(f'Hi **{member.name}**, welcome to the server! Have a great time!')
+    logging.info(f"User join: {member}")
     # temp request
     async with aiohttp.ClientSession() as session:
         async with session.get('https://api1.testig.ml/secure/ping_ojwg/hi') as resp:

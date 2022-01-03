@@ -1,8 +1,12 @@
 import os
-TOKEN=os.getenv("TOKEN")
-# TOKEN="OTI1NDQxNTI4OTIxNDc3MTUw.YctKlg.7L1Y5ltPLfXUVQmeGpG_MQTipfE"
-ADMINS_IDS=['925441528921477150']
-PROGRESS_USER_MSG_COUNT=20
+from dotenv import load_dotenv
+
+# load from .env
+load_dotenv()
+
+TOKEN = os.getenv("TOKEN")
+ADMINS_IDS = ['925441528921477150']
+PROGRESS_USER_MSG_COUNT = 20
 
 # db
 user = 'postgres'
