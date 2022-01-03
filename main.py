@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 import aiohttp
 from discord.ext import commands
-from sqlalchemy import update
+from sqlalchemy import update, desc
 from sqlalchemy.dialects.postgresql import insert
 import config
 import discord
@@ -133,7 +133,7 @@ async def get_userlist(session=async_session):
     res = "🎉 **TOP USERS BY LVL** 🎉\n"
 
     async with session() as session:
-        q = select(User.username, User.lvl)
+        q = select(User.username, User.lvl).order_by(desc(User.lvl))
         result = await session.execute(q)
         result = result.all()
 
