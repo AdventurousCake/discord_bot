@@ -1,19 +1,22 @@
 import asyncio
 import io
 import os
+import random
 import sys
 import logging
 from datetime import datetime
 import aiohttp
 from discord.ext import commands
-from sqlalchemy import update, insert
+from sqlalchemy import update
+from sqlalchemy.dialects.postgresql import insert
 import config
 import discord
+from data import games
 
 logging.basicConfig(stream=sys.stdout,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
                     datefmt='%Y-%m-%d:%H:%M:%S',
-                    level=logging.DEBUG)
+                    level=logging.INFO)
 
 from sqlalchemy.future import select
 from db_init import Base, async_session, engine
@@ -95,6 +98,40 @@ async def kick(ctx, user: discord.Member, *, reason="No reason provided"):
     logging.info(f"User unban: {user.display_name}")
 
 
+def get_embed_games(title, descr, img, stars=None):
+    if not stars:
+        stars = "⭐" * random.randint(4, 5)
+    else:
+        stars = "⭐" * stars
+
+    embed = discord.Embed(
+        title=title,
+        description=f'{stars}\n{descr}\n',
+        colour=discord.Colour.from_rgb(255, 165, 0),
+        # image=img,
+    )
+    embed.set_thumbnail(url=img)
+    embed.add_field(name='Get game', value='[**Click here to Play**](https://discord.com/channels/)', inline=False)
+    return embed
+
+
+async def get_userlist(session=async_session):
+    res = "TOP USERS BY LVL 🎉"
+
+    async with session() as session:
+        q = select(User.username, User.lvl)
+        result = await session.execute(q)
+        result = result.all()
+
+        for u in result:
+            name = u[0]
+            lvl = u[1]
+
+            res += f"{name}: {lvl}\n"
+
+    return res
+
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -110,7 +147,8 @@ async def on_message(message):
         await message.channel.send('Hello!')
 
     elif message_text_l.startswith('/help'):
-        help = '''Bot commands:
+        help = '''🤖 Bot commands:
+        /lvl - top users
         /listgames
         /kick
         /ban
@@ -119,16 +157,22 @@ async def on_message(message):
         await message.channel.send(help)
 
     elif message_text_l.startswith('/lvl'):
-        await message.channel.send(get_all_user_lvl())
+        res = await get_userlist()
+        await message.channel.send(res)
 
     elif message_text_l.startswith('/listgames'):
-        await message.channel.send("List of games")
-        async with aiohttp.ClientSession() as session:
-            async with session.get('https://i.ibb.co/z2nZ57Z/123.jpg') as resp:
-                if resp.status != 200:
-                    return await message.channel.send('Could not download file...')
-                data = io.BytesIO(await resp.read())
-                await message.channel.send(file=discord.File(data, 'cool_image.png'))
+        await message.channel.send("🎲 List of games 🎯")
+
+        for game in games:
+            await message.channel.send(embed=get_embed_games(title=game['title'], descr=game['description'],
+                                                             img=game['image'], stars=game['stars']))
+
+        # async with aiohttp.ClientSession() as session:
+        #     async with session.get('https://i.ibb.co/z2nZ57Z/123.jpg') as resp:
+        #         if resp.status != 200:
+        #             return await message.channel.send('Could not download file...')
+        #         data = io.BytesIO(await resp.read())
+        #         await message.channel.send(file=discord.File(data, 'cool_image.png'))
 
     await bot.process_commands(message)
     await save_history(user_id, name, message=message)
